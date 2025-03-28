@@ -8,8 +8,8 @@ export default function Slides() {
   const [modalOpen, setModalOpen] = useState(false);
   const [currentSlide, setCurrentSlide] = useState(null);
   const [formData, setFormData] = useState({
-    title: '',
-    description: '',
+    text: '',
+    // description: '',
     image: ''
   });
 
@@ -62,7 +62,7 @@ export default function Slides() {
         <button
           onClick={() => {
             setCurrentSlide(null);
-            setFormData({ title: '', description: '', image: '' });
+            setFormData({ text: '', image: '' });
             setModalOpen(true);
           }}
           className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700"
@@ -149,21 +149,21 @@ export default function Slides() {
                       type="text"
                       required
                       className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                      value={formData.title}
-                      onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                      value={formData.text}
+                      onChange={(e) => setFormData({ ...formData, text: e.target.value })}
                     />
                   </div>
 
-                  <div>
+                  {/* <div>
                     <label className="block text-sm font-medium text-gray-700">Description</label>
                     <input
                       type="text"
                       required
                       className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                       value={formData.description}
-                      onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                      // onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                     />
-                  </div>
+                  </div> */}
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700">Image URL</label>
