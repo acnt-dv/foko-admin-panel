@@ -123,7 +123,7 @@ export default function Projects() {
                         <div className="text-sm font-medium text-gray-900">{project.title}</div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-500">{project.category}</div>
+                        <div className="text-sm text-gray-500">{project?.category}</div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                         <button
@@ -216,14 +216,14 @@ export default function Projects() {
                       className="mt-1 block w-full"
                     />
                     <div className="mt-2 grid grid-cols-3 gap-2">
-                      {formData.images.map((image, index) => (
+                      {formData?.images?.map((image, index) => (
                         <div key={index} className="relative">
                           <img src={image} alt="" className="h-20 w-20 object-cover rounded" />
                           <button
                             type="button"
                             onClick={() => setFormData({
                               ...formData,
-                              images: formData.images.filter((_, i) => i !== index)
+                              images: formData?.images?.filter((_, i) => i !== index)
                             })}
                             className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1"
                           >

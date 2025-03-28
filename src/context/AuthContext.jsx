@@ -18,12 +18,13 @@ export const AuthProvider = ({ children }) => {
     }
   }, []);
 
-  const login = async (email, password) => {
+  const login = async (username, password) => {
     try {
-      const response = await api.post('/login', { email, password });
+      const response = await api.post('/login', { username, password });
       const { token } = response.data;
       localStorage.setItem('token', token);
-      setUser(response.data.user);
+      // setUser(response.data.user);
+      setUser({user:'admin'});
       return true;
     } catch (error) {
       console.error('Login failed:', error);
@@ -38,8 +39,8 @@ export const AuthProvider = ({ children }) => {
 
   const checkAuth = async () => {
     try {
-      const response = await api.get('/user');
-      setUser(response.data);
+      // const response = await api.get('/user');
+      // setUser(response.data);
     } catch (error) {
       logout();
     } finally {
