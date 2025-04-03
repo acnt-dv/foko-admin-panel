@@ -7,13 +7,7 @@ export default function Projects() {
   const [projects, setProjects] = useState([]);
   const [modalOpen, setModalOpen] = useState(false);
   const [currentProject, setCurrentProject] = useState(null);
-  const [formData, setFormData] = useState({
-    title: '',
-    description: '',
-    images: [],
-    cover_image: '',
-    category: ''
-  });
+  const [formData, setFormData] = useState(null);
 
   useEffect(() => {
     fetchProjects();
@@ -30,12 +24,26 @@ export default function Projects() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    console.log(formData);
+
+    debugger
     try {
       if (currentProject) {
-        await api.put(`/projects/${currentProject.id}`, formData);
+        const formDataToSend = new FormData();
+        const blob = new Blob([formData.image], { type: "image/png" }); // Convert binary to Blob
+        formDataToSend.append("title", formData?.title)
+        formDataToSend.append("description", formData?.description)
+        formDataToSend.append("image", blob, "uploaded-image.png"); // Append binary data as file
+        await api.put(`/projects/${currentProject.id}`, formDataToSend);
         toast.success('Project updated successfully');
       } else {
-        await api.post('/projects', formData);
+        const formDataToSend = new FormData();
+        const blob = new Blob([formData.image], { type: "image/png" }); // Convert binary to Blob
+        formDataToSend.append("title", formData?.title)
+        formDataToSend.append("description", formData?.description)
+        formDataToSend.append("image", blob, "uploaded-image.png"); // Append binary data as file
+
+        await api.post('/projects', formDataToSend);
         toast.success('Project created successfully');
       }
       setModalOpen(false);
@@ -57,22 +65,53 @@ export default function Projects() {
     }
   };
 
-  const handleImageUpload = async (e) => {
-    const files = Array.from(e.target.files);
-    const formData = new FormData();
-    files.forEach(file => {
-      formData.append('images[]', file);
-    });
+  const handleImage = async (e) => {
+    const files = (e.target.files[0]);
+    debugger
+    const file = fs.createReadStream(e.target.value)
+    debugger
+    setFormData({ ...formData, image: files })
+    // const formData = new FormData();
+    // files.forEach(file => {
+    //   formData.append('images[]', file);
+    // });
+    // setFormData(prev => ({
+    //   ...prev,
+    //   images: [...prev.images, ...response.data.urls]
+    // }));
+  }
 
-    try {
-      const response = await api.post('/upload', formData);
-      setFormData(prev => ({
-        ...prev,
-        images: [...prev.images, ...response.data.urls]
-      }));
-    } catch (error) {
-      toast.error('Failed to upload images');
+  const handleImageUpload = async (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+
+      reader.onloadend = () => {
+        const binaryData = reader.result; // Binary data as ArrayBuffer
+
+        // Update form data state with binary data
+        setFormData((prevFormData) => ({
+          ...prevFormData,
+          image: binaryData, // Store binary instead of file object
+        }));
+      };
+
+      reader.readAsArrayBuffer(file); // Convert file to binary
     }
+    //     const formData = new FormData();
+    //     files.forEach(file => {
+    //       formData.append('images[]', file);
+    //     });
+    // debugger
+    // try {
+    //   const response = await api.post('/upload', formData);
+    //   setFormData(prev => ({
+    //     ...prev,
+    //     images: [...prev.images, ...response.data.urls]
+    //   }));
+    // } catch (error) {
+    //   toast.error('Failed to upload images');
+    // }
   };
 
   return (
@@ -85,9 +124,9 @@ export default function Projects() {
             setFormData({
               title: '',
               description: '',
-              images: [],
-              cover_image: '',
-              category: ''
+              image: '',
+              // cover_image: '',
+              // category: ''
             });
             setModalOpen(true);
           }}
@@ -185,7 +224,7 @@ export default function Projects() {
                     />
                   </div>
 
-                  <div>
+                  {/* <div>
                     <label className="block text-sm font-medium text-gray-700">Category</label>
                     <input
                       type="text"
@@ -194,9 +233,9 @@ export default function Projects() {
                       value={formData.category}
                       onChange={(e) => setFormData({ ...formData, category: e.target.value })}
                     />
-                  </div>
+                  </div> */}
 
-                  <div>
+                  {/* <div>
                     <label className="block text-sm font-medium text-gray-700">Cover Image URL</label>
                     <input
                       type="text"
@@ -205,17 +244,19 @@ export default function Projects() {
                       value={formData.cover_image}
                       onChange={(e) => setFormData({ ...formData, cover_image: e.target.value })}
                     />
-                  </div>
+                  </div> */}
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700">Gallery Images</label>
                     <input
                       type="file"
-                      multiple
+                      // multiple
+                      accept="image/*"
                       onChange={handleImageUpload}
+                      // onChange={handleImage}
                       className="mt-1 block w-full"
                     />
-                    <div className="mt-2 grid grid-cols-3 gap-2">
+                    {/* <div className="mt-2 grid grid-cols-3 gap-2">
                       {formData?.images?.map((image, index) => (
                         <div key={index} className="relative">
                           <img src={image} alt="" className="h-20 w-20 object-cover rounded" />
@@ -231,7 +272,7 @@ export default function Projects() {
                           </button>
                         </div>
                       ))}
-                    </div>
+                    </div> */}
                   </div>
                 </div>
 
