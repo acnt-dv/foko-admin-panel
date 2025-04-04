@@ -26,14 +26,49 @@ export default function Slides() {
     }
   };
 
+  const handleImageUpload = async (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+
+      reader.onloadend = () => {
+        const binaryData = reader.result; // Binary data as ArrayBuffer
+
+        // Convert binary to Blob
+        const blob = new Blob([binaryData], { type: file.type });
+
+        // Update form data state with binary data
+        setFormData((prevFormData) => ({
+          ...prevFormData,
+          image: {
+            file: blob,
+            name: file?.name || "uploaded-image.png",
+          }, // Store binary instead of file object
+        }));
+      };
+
+      reader.readAsArrayBuffer(file); // Convert file to binary
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
+      const formDataToSend = new FormData();
+
+      Object.entries(formData).forEach(([key, value]) => {
+        if (key === "image") {
+          formDataToSend.append(key, value?.file, value?.name);
+        } else {
+          formDataToSend.append(key, value);
+        }
+      });
+
       if (currentSlide) {
-        await api.put(`/slides/${currentSlide.id}`, formData);
+        await api.put(`/slides/${currentSlide.id}`, formDataToSend);
         toast.success('Slide updated successfully');
       } else {
-        await api.post('/slides', formData);
+        await api.post('/slides', formDataToSend);
         toast.success('Slide created successfully');
       }
       setModalOpen(false);
@@ -168,11 +203,12 @@ export default function Slides() {
                   <div>
                     <label className="block text-sm font-medium text-gray-700">Image URL</label>
                     <input
-                      type="text"
+                      type="file"
                       required
                       className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                      value={formData.image}
-                      onChange={(e) => setFormData({ ...formData, image: e.target.value })}
+                      // value={formData.image}
+                      // onChange={(e) => setFormData({ ...formData, image: e.target.value })}
+                      onChange={handleImageUpload}
                     />
                   </div>
                 </div>

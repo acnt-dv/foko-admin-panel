@@ -24,25 +24,23 @@ export default function Projects() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log(formData);
 
-    debugger
     try {
+      const formDataToSend = new FormData();
+
+      Object.entries(formData).forEach(([key, value]) => {
+        if (key === "image") {
+          formDataToSend.append(key, value?.file, value?.name);
+        } else {
+          formDataToSend.append(key, value);
+        }
+      });
+
       if (currentProject) {
-        const formDataToSend = new FormData();
-        const blob = new Blob([formData.image], { type: "image/png" }); // Convert binary to Blob
-        formDataToSend.append("title", formData?.title)
-        formDataToSend.append("description", formData?.description)
-        formDataToSend.append("image", blob, "uploaded-image.png"); // Append binary data as file
+        
         await api.put(`/projects/${currentProject.id}`, formDataToSend);
         toast.success('Project updated successfully');
       } else {
-        const formDataToSend = new FormData();
-        const blob = new Blob([formData.image], { type: "image/png" }); // Convert binary to Blob
-        formDataToSend.append("title", formData?.title)
-        formDataToSend.append("description", formData?.description)
-        formDataToSend.append("image", blob, "uploaded-image.png"); // Append binary data as file
-
         await api.post('/projects', formDataToSend);
         toast.success('Project created successfully');
       }
@@ -65,22 +63,6 @@ export default function Projects() {
     }
   };
 
-  const handleImage = async (e) => {
-    const files = (e.target.files[0]);
-    debugger
-    const file = fs.createReadStream(e.target.value)
-    debugger
-    setFormData({ ...formData, image: files })
-    // const formData = new FormData();
-    // files.forEach(file => {
-    //   formData.append('images[]', file);
-    // });
-    // setFormData(prev => ({
-    //   ...prev,
-    //   images: [...prev.images, ...response.data.urls]
-    // }));
-  }
-
   const handleImageUpload = async (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -89,29 +71,21 @@ export default function Projects() {
       reader.onloadend = () => {
         const binaryData = reader.result; // Binary data as ArrayBuffer
 
+        // Convert binary to Blob
+        const blob = new Blob([binaryData], { type: file.type });
+
         // Update form data state with binary data
         setFormData((prevFormData) => ({
           ...prevFormData,
-          image: binaryData, // Store binary instead of file object
+          image: {
+            file: blob,
+            name: file?.name || "uploaded-image.png",
+          }, // Store binary instead of file object
         }));
       };
 
       reader.readAsArrayBuffer(file); // Convert file to binary
     }
-    //     const formData = new FormData();
-    //     files.forEach(file => {
-    //       formData.append('images[]', file);
-    //     });
-    // debugger
-    // try {
-    //   const response = await api.post('/upload', formData);
-    //   setFormData(prev => ({
-    //     ...prev,
-    //     images: [...prev.images, ...response.data.urls]
-    //   }));
-    // } catch (error) {
-    //   toast.error('Failed to upload images');
-    // }
   };
 
   return (
@@ -250,6 +224,7 @@ export default function Projects() {
                     <label className="block text-sm font-medium text-gray-700">Gallery Images</label>
                     <input
                       type="file"
+                      required
                       // multiple
                       accept="image/*"
                       onChange={handleImageUpload}
