@@ -8,6 +8,7 @@ export default function Projects() {
     const [modalOpen, setModalOpen] = useState(false);
     const [currentProject, setCurrentProject] = useState(null);
     const [formData, setFormData] = useState(null);
+    const [galleryFormData, setGalleryFormData] = useState(null);
 
     useEffect(() => {
         fetchProjects();
@@ -27,7 +28,6 @@ export default function Projects() {
 
         try {
             const formDataToSend = new FormData();
-
             Object.entries(formData).forEach(([key, value]) => {
                 if (key === "image") {
                     formDataToSend.append(key, value?.file, value?.name);
@@ -36,12 +36,21 @@ export default function Projects() {
                 }
             });
 
-            if (currentProject) {
 
+            if (currentProject) {
                 await api.put(`/projects/${currentProject.id}`, formDataToSend);
                 toast.success('Project updated successfully');
             } else {
-                await api.post('/projects', formDataToSend);
+                const response = await api.post('/projects', formDataToSend);
+                if (response?.data?.id) {
+                    await Promise.all(
+                        galleryFormData?.images?.map(item => {
+                            const dataToSend = new FormData();
+                            dataToSend.append("image", item?.file, item?.name);
+                            api.post(`/projects/${response?.data?.id}/gallery`, dataToSend);
+                        })
+                    );
+                }
                 toast.success('Project created successfully');
             }
             setModalOpen(false);
@@ -87,6 +96,41 @@ export default function Projects() {
             reader.readAsArrayBuffer(file); // Convert file to binary
         }
     };
+
+    const handleGalleryUpload = async (e) => {
+        const files = Array.from(e.target.files);
+        if (!files.length) return;
+
+        const readFiles = files.map(file => {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+
+                reader.onloadend = () => {
+                    const binaryData = reader.result;
+                    const blob = new Blob([binaryData], {type: file.type});
+
+                    resolve({
+                        file: blob,
+                        name: file.name || "uploaded-image.png",
+                    });
+                };
+
+                reader.onerror = reject;
+                reader.readAsArrayBuffer(file);
+            });
+        });
+
+        try {
+            const images = await Promise.all(readFiles);
+            setGalleryFormData(prev => ({
+                ...prev,
+                images, // array of image objects
+            }));
+        } catch (err) {
+            console.error("Error reading files:", err);
+        }
+    };
+
 
     return (
         <div className="space-y-6">
@@ -236,7 +280,7 @@ export default function Projects() {
                                             required
                                             multiple
                                             accept="image/*"
-                                            onChange={handleImageUpload}
+                                            onChange={handleGalleryUpload}
                                             // onChange={handleImage}
                                             className="mt-1 block w-full"
                                         />
