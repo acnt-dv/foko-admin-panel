@@ -2,6 +2,7 @@
 import {useState, useEffect} from 'react';
 import api from '../config/axios';
 import {toast} from 'react-toastify';
+import GalleryPreview from "../components/GalleryPreview.jsx";
 
 export default function Projects() {
     const [projects, setProjects] = useState([]);
@@ -13,6 +14,10 @@ export default function Projects() {
     useEffect(() => {
         fetchProjects();
     }, []);
+
+    useEffect(()=>{
+        console.log(galleryFormData)
+    },[galleryFormData])
 
     const fetchProjects = async () => {
         try {
@@ -284,23 +289,9 @@ export default function Projects() {
                                             // onChange={handleImage}
                                             className="mt-1 block w-full"
                                         />
-                                        {/* <div className="mt-2 grid grid-cols-3 gap-2">
-                      {formData?.images?.map((image, index) => (
-                        <div key={index} className="relative">
-                          <img src={image} alt="" className="h-20 w-20 object-cover rounded" />
-                          <button
-                            type="button"
-                            onClick={() => setFormData({
-                              ...formData,
-                              images: formData?.images?.filter((_, i) => i !== index)
-                            })}
-                            className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1"
-                          >
-                            ×
-                          </button>
-                        </div>
-                      ))}
-                    </div> */}
+                                        <div className="mt-2">
+                                            <GalleryPreview galleryFormData={galleryFormData} setGalleryFormData={setGalleryFormData}/>
+                                        </div>
                                     </div>
                                 </div>
 
