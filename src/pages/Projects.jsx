@@ -41,7 +41,6 @@ export default function Projects() {
                 }
             });
 
-
             if (currentProject) {
                 await api.put(`/projects/${currentProject.id}`, formDataToSend);
                 toast.success('Project updated successfully');
