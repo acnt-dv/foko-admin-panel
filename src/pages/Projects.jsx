@@ -15,10 +15,6 @@ export default function Projects() {
         fetchProjects();
     }, []);
 
-    useEffect(()=>{
-        console.log(galleryFormData)
-    },[galleryFormData])
-
     const fetchProjects = async () => {
         try {
             const response = await api.get('/projects');
@@ -33,7 +29,6 @@ export default function Projects() {
 
         try {
             const formDataToSend = new FormData();
-            debugger
             Object.entries(formData).forEach(([key, value]) => {
                 if (key === "image") {
                   if(typeof key !== "string" ){
@@ -45,7 +40,6 @@ export default function Projects() {
             });
 
             if (currentProject) {
-              debugger
                 await api.put(`/projects/${currentProject.id}`, formDataToSend);
                 toast.success('Project updated successfully');
             } else {
