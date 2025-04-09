@@ -1,13 +1,21 @@
 import { useEffect, useState } from "react";
 
-const GalleryPreview = ({ galleryFormData, setGalleryFormData }) => {
+const GalleryPreview = ({ galleryFormData, setGalleryFormData, currentProject }) => {
     const [previewUrls, setPreviewUrls] = useState([]);
 
+    console.log(currentProject);
+
+    useEffect(()=> {
+        if(currentProject){
+            setGalleryFormData({images: currentProject?.galleries});
+        }
+    },[]);
+    
     useEffect(() => {
         const urls = galleryFormData?.images?.map((image) => {
-            if (typeof image?.file === "string") {
+            if (typeof image?.file === "string" || typeof image?.image === "string") {
                 // Already a valid URL
-                return image;
+                return image?.image;
             } else if (image?.file instanceof Blob || image?.file instanceof File) {
                 // Convert Blob/File to Object URL
                 return URL.createObjectURL(image?.file);
