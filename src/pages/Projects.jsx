@@ -15,10 +15,6 @@ export default function Projects() {
         fetchProjects();
     }, []);
 
-    useEffect(()=>{
-        console.log(galleryFormData)
-    },[galleryFormData])
-
     const fetchProjects = async () => {
         try {
             const response = await api.get('/projects');
@@ -289,7 +285,8 @@ export default function Projects() {
                                             className="mt-1 block w-full"
                                         />
                                         <div className="mt-2">
-                                            <GalleryPreview galleryFormData={galleryFormData} setGalleryFormData={setGalleryFormData}/>
+                                            <GalleryPreview galleryFormData={galleryFormData}
+                                                            setGalleryFormData={setGalleryFormData}/>
                                         </div>
                                     </div>
                                 </div>
