@@ -31,7 +31,9 @@ export default function Projects() {
             const formDataToSend = new FormData();
             Object.entries(formData).forEach(([key, value]) => {
                 if (key === "image") {
+                  if(typeof key !== "string" ){
                     formDataToSend.append(key, value?.file, value?.name);
+                  }
                 } else {
                     formDataToSend.append(key, value);
                 }
@@ -263,7 +265,7 @@ export default function Projects() {
                                             URL</label>
                                         <input
                                             type="file"
-                                            required
+                                            required={!currentProject}
                                             // className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                                             className="mt-1 block w-full"
                                             value={formData.cover_image}
@@ -277,7 +279,7 @@ export default function Projects() {
                                             Images</label>
                                         <input
                                             type="file"
-                                            required
+                                            required={!currentProject}
                                             multiple
                                             accept="image/*"
                                             onChange={handleGalleryUpload}
@@ -285,8 +287,7 @@ export default function Projects() {
                                             className="mt-1 block w-full"
                                         />
                                         <div className="mt-2">
-                                            <GalleryPreview galleryFormData={galleryFormData}
-                                                            setGalleryFormData={setGalleryFormData}/>
+                                            <GalleryPreview galleryFormData={galleryFormData} setGalleryFormData={setGalleryFormData} currentProject={currentProject}/>
                                         </div>
                                     </div>
                                 </div>
