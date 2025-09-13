@@ -29,16 +29,14 @@ export default function Projects() {
 
         try {
             const formDataToSend = new FormData();
-            Object.entries(formData).forEach(([key, value]) => {
-                if (key === "image") {
-                  if(typeof key !== "string" ){
-                    formDataToSend.append(key, value?.file, value?.name);
-                  }
-                } else {
-                    formDataToSend.append(key, value);
-                }
+            Object.entries(formData || {}).forEach(([key, value]) => {
+              if (key === "image" && value && value.file) {
+                formDataToSend.append("image", value.file, value.name || "uploaded-image.png");
+              } else if (value !== undefined && value !== null) {
+                formDataToSend.append(key, value);
+              }
             });
-
+            console.debug([...formDataToSend.entries()]);
             if (currentProject) {
                 await api.put(`/projects/${currentProject.id}`, formDataToSend);
                 toast.success('Project updated successfully');
@@ -46,11 +44,11 @@ export default function Projects() {
                 const response = await api.post('/projects', formDataToSend);
                 if (response?.data?.id) {
                     await Promise.all(
-                        galleryFormData?.images?.map(item => {
-                            const dataToSend = new FormData();
-                            dataToSend.append("image", item?.file, item?.name);
-                            api.post(`/projects/${response?.data?.id}/gallery`, dataToSend);
-                        })
+                      (galleryFormData?.images || []).map((item) => {
+                        const dataToSend = new FormData();
+                        dataToSend.append("image", item.file, item.name || "uploaded-image.png");
+                        return api.post(`/projects/${response.data.id}/gallery`, dataToSend);
+                      })
                     );
                 }
                 toast.success('Project created successfully');
@@ -74,29 +72,16 @@ export default function Projects() {
         }
     };
 
-    const handleImageUpload = async (e) => {
-        const file = e.target.files[0];
-        if (file) {
-            const reader = new FileReader();
-
-            reader.onloadend = () => {
-                const binaryData = reader.result; // Binary data as ArrayBuffer
-
-                // Convert binary to Blob
-                const blob = new Blob([binaryData], {type: file.type});
-
-                // Update form data state with binary data
-                setFormData((prevFormData) => ({
-                    ...prevFormData,
-                    image: {
-                        file: blob,
-                        name: file?.name || "uploaded-image.png",
-                    }, // Store binary instead of file object
-                }));
-            };
-
-            reader.readAsArrayBuffer(file); // Convert file to binary
-        }
+    const handleImageUpload = (e) => {
+      const file = e.target.files && e.target.files[0];
+      if (!file) return;
+      setFormData((prev) => ({
+        ...prev,
+        image: {
+          file,
+          name: file.name || "uploaded-image.png",
+        },
+      }));
     };
 
     const handleGalleryUpload = async (e) => {
@@ -264,13 +249,11 @@ export default function Projects() {
                                         <label className="block text-sm font-medium text-gray-700">Cover Image
                                             URL</label>
                                         <input
-                                            type="file"
-                                            required={!currentProject}
-                                            // className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                                            className="mt-1 block w-full"
-                                            value={formData.cover_image}
-                                            // onChange={(e) => setFormData({ ...formData, cover_image: e.target.value })}
-                                            onChange={handleImageUpload}
+                                          type="file"
+                                          required={!currentProject}
+                                          className="mt-1 block w-full"
+                                          accept="image/*"
+                                          onChange={handleImageUpload}
                                         />
                                     </div>
 
