@@ -5,8 +5,6 @@ import { toast } from 'react-toastify';
 import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
 
-const FOKO_API_TOKEN = 'Bearer GgFdzkPLh9NiFTHKMYkUbFsefWRACNPHKNnOrHCdEdUy0sAZXQiBF74A22BW';
-
 export default function AboutUs() {
   const [aboutData, setAboutData] = useState({
     text: '',
