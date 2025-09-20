@@ -10,6 +10,7 @@ export default function Projects() {
     const [currentProject, setCurrentProject] = useState(null);
     const [formData, setFormData] = useState(null);
     const [galleryFormData, setGalleryFormData] = useState(null);
+    const [projectData, setProjectData] = useState([{ key: '', value: '' }]);
 
     useEffect(() => {
         fetchProjects();
@@ -39,6 +40,14 @@ export default function Projects() {
             console.debug([...formDataToSend.entries()]);
             if (currentProject) {
                 await api.put(`/projects/${currentProject.id}`, formDataToSend);
+                await Promise.all(
+                  (projectData || [])
+                    .filter((item) => item && item.key && item.key.trim() !== '')
+                    .map((item) => api.post(`/projects/${currentProject.id}/data`, {
+                      key: item.key,
+                      value: item.value ?? ''
+                    }))
+                );
                 toast.success('Project updated successfully');
             } else {
                 const response = await api.post('/projects', formDataToSend);
@@ -50,9 +59,18 @@ export default function Projects() {
                         return api.post(`/projects/${response.data.id}/gallery`, dataToSend);
                       })
                     );
+                    await Promise.all(
+                      (projectData || [])
+                        .filter((item) => item && item.key && item.key.trim() !== '')
+                        .map((item) => api.post(`/projects/${response.data.id}/data`, {
+                          key: item.key,
+                          value: item.value ?? ''
+                        }))
+                    );
                 }
                 toast.success('Project created successfully');
             }
+            setProjectData([{ key: '', value: '' }]);
             setModalOpen(false);
             fetchProjects();
         } catch (error) {
@@ -118,6 +136,20 @@ export default function Projects() {
         }
     };
 
+    const handleKVChange = (index, field, newValue) => {
+      setProjectData((prev) => {
+        const copy = [...prev];
+        copy[index] = { ...copy[index], [field]: newValue };
+        return copy;
+      });
+    };
+
+    const addKVRow = () => setProjectData((prev) => [...prev, { key: '', value: '' }]);
+
+    const removeKVRow = (index) => {
+      setProjectData((prev) => prev.filter((_, i) => i !== index));
+    };
+
 
     return (
         <div className="space-y-6">
@@ -133,6 +165,7 @@ export default function Projects() {
                             // cover_image: '',
                             // category: ''
                         });
+                        setProjectData([{ key: '', value: '' }]);
                         setModalOpen(true);
                     }}
                     className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700"
@@ -177,6 +210,11 @@ export default function Projects() {
                                                 onClick={() => {
                                                     setCurrentProject(project);
                                                     setFormData(project);
+                                                    setProjectData(
+                                                      Array.isArray(project.project_data) && project.project_data.length
+                                                        ? project.project_data.map(({ key, value }) => ({ key, value }))
+                                                        : [{ key: '', value: '' }]
+                                                    );
                                                     setModalOpen(true);
                                                 }}
                                                 className="text-indigo-600 hover:text-indigo-900 mr-4"
@@ -257,6 +295,44 @@ export default function Projects() {
                                         />
                                     </div>
 
+                                    <div>
+                                        <h3 className="mt-2 mb-1 text-sm font-semibold text-gray-900 border-t pt-3">Project Custom Data</h3>
+                                        <label className="block text-sm font-medium text-gray-700">Custom Data (Key / Value)</label>
+                                        <div className="mt-2 space-y-2">
+                                            {projectData.map((row, idx) => (
+                                                <div key={idx} className="flex items-center gap-2">
+                                                    <input
+                                                        type="text"
+                                                        placeholder="Key"
+                                                        className="block w-1/2 border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                                                        value={row.key}
+                                                        onChange={(e) => handleKVChange(idx, 'key', e.target.value)}
+                                                    />
+                                                    <input
+                                                        type="text"
+                                                        placeholder="Value"
+                                                        className="block w-1/2 border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                                                        value={row.value}
+                                                        onChange={(e) => handleKVChange(idx, 'value', e.target.value)}
+                                                    />
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => removeKVRow(idx)}
+                                                        className="text-red-600 hover:text-red-800 text-sm"
+                                                    >
+                                                        Remove
+                                                    </button>
+                                                </div>
+                                            ))}
+                                            <button
+                                                type="button"
+                                                onClick={addKVRow}
+                                                className="inline-flex items-center px-3 py-1 border border-gray-300 rounded-md shadow-sm text-sm bg-white hover:bg-gray-50"
+                                            >
+                                                + Add Row
+                                            </button>
+                                        </div>
+                                    </div>
                                     <div>
                                         <label className="block text-sm font-medium text-gray-700">Gallery
                                             Images</label>
