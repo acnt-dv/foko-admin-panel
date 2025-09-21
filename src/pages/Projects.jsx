@@ -52,13 +52,18 @@ export default function Projects() {
             } else {
                 const response = await api.post('/projects', formDataToSend);
                 if (response?.data?.id) {
-                    await Promise.all(
+                    const galleryResults = await Promise.allSettled(
                       (galleryFormData?.images || []).map((item) => {
                         const dataToSend = new FormData();
                         dataToSend.append("image", item.file, item.name || "uploaded-image.png");
                         return api.post(`/projects/${response.data.id}/gallery`, dataToSend);
                       })
                     );
+                    // Warn if any image uploads failed, but do not interrupt the flow
+                    const failedUploads = galleryResults.filter(r => r.status === 'rejected').length;
+                    if (failedUploads > 0) {
+                      toast.warn(`${failedUploads} image${failedUploads > 1 ? 's' : ''} failed to upload. The rest were uploaded successfully.`);
+                    }
                     await Promise.all(
                       (projectData || [])
                         .filter((item) => item && item.key && item.key.trim() !== '')
