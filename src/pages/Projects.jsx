@@ -10,7 +10,7 @@ export default function Projects() {
     const [currentProject, setCurrentProject] = useState(null);
     const [formData, setFormData] = useState(null);
     const [galleryFormData, setGalleryFormData] = useState(null);
-    const [projectData, setProjectData] = useState([{ key: '', value: '' }]);
+    const [projectData, setProjectData] = useState([{id: '', key: '', value: '' }]);
 
     useEffect(() => {
         fetchProjects();
@@ -31,46 +31,48 @@ export default function Projects() {
         try {
             const formDataToSend = new FormData();
             Object.entries(formData || {}).forEach(([key, value]) => {
-              if (key === "image" && value && value.file) {
-                formDataToSend.append("image", value.file, value.name || "uploaded-image.png");
-              } else if (value !== undefined && value !== null) {
-                formDataToSend.append(key, value);
-              }
+                if (key === 'image' && value && value.file) {
+                    formDataToSend.append('image', value.file, value.name || 'uploaded-image.png');
+                } else if (key === 'tags') {
+                    const tagsArray = Array.isArray(value) ? value : (value ? [value] : []);
+                    formDataToSend.append('tags', tagsArray);
+                } else if (value !== undefined && value !== null) {
+                    formDataToSend.append(key, value);
+                }
             });
             console.debug([...formDataToSend.entries()]);
             if (currentProject) {
                 await api.put(`/projects/${currentProject.id}`, formDataToSend);
                 await Promise.all(
-                  (projectData || [])
-                    .filter((item) => item && item.key && item.key.trim() !== '')
-                    .map((item) => api.post(`/projects/${currentProject.id}/data`, {
-                      key: item.key,
-                      value: item.value ?? ''
-                    }))
+                    (projectData || [])
+                        .filter((item) => item && item.key && item.key.trim() !== '')
+                        .map((item) => api.post(`/projects/${currentProject.id}/data`, {
+                            key: item.key,
+                            value: item.value ?? ''
+                        }))
                 );
                 toast.success('Project updated successfully');
             } else {
                 const response = await api.post('/projects', formDataToSend);
                 if (response?.data?.id) {
                     const galleryResults = await Promise.allSettled(
-                      (galleryFormData?.images || []).map((item) => {
-                        const dataToSend = new FormData();
-                        dataToSend.append("image", item.file, item.name || "uploaded-image.png");
-                        return api.post(`/projects/${response.data.id}/gallery`, dataToSend);
-                      })
+                        (galleryFormData?.images || []).map((item) => {
+                            const dataToSend = new FormData();
+                            dataToSend.append("image", item.file, item.name || "uploaded-image.png");
+                            return api.post(`/projects/${response.data.id}/gallery`, dataToSend);
+                        })
                     );
-                    // Warn if any image uploads failed, but do not interrupt the flow
                     const failedUploads = galleryResults.filter(r => r.status === 'rejected').length;
                     if (failedUploads > 0) {
-                      toast.warn(`${failedUploads} image${failedUploads > 1 ? 's' : ''} failed to upload. The rest were uploaded successfully.`);
+                        toast.warn(`${failedUploads} image${failedUploads > 1 ? 's' : ''} failed to upload. The rest were uploaded successfully.`);
                     }
                     await Promise.all(
-                      (projectData || [])
-                        .filter((item) => item && item.key && item.key.trim() !== '')
-                        .map((item) => api.post(`/projects/${response.data.id}/data`, {
-                          key: item.key,
-                          value: item.value ?? ''
-                        }))
+                        (projectData || [])
+                            .filter((item) => item && item.key && item.key.trim() !== '')
+                            .map((item) => api.post(`/projects/${response.data.id}/data`, {
+                                key: item.key,
+                                value: item.value ?? ''
+                            }))
                     );
                 }
                 toast.success('Project created successfully');
@@ -96,15 +98,15 @@ export default function Projects() {
     };
 
     const handleImageUpload = (e) => {
-      const file = e.target.files && e.target.files[0];
-      if (!file) return;
-      setFormData((prev) => ({
-        ...prev,
-        image: {
-          file,
-          name: file.name || "uploaded-image.png",
-        },
-      }));
+        const file = e.target.files && e.target.files[0];
+        if (!file) return;
+        setFormData((prev) => ({
+            ...prev,
+            image: {
+                file,
+                name: file.name || "uploaded-image.png",
+            },
+        }));
     };
 
     const handleGalleryUpload = async (e) => {
@@ -134,7 +136,7 @@ export default function Projects() {
             const images = await Promise.all(readFiles);
             setGalleryFormData(prev => ({
                 ...prev,
-                images, // array of image objects
+                images,
             }));
         } catch (err) {
             console.error("Error reading files:", err);
@@ -142,17 +144,29 @@ export default function Projects() {
     };
 
     const handleKVChange = (index, field, newValue) => {
-      setProjectData((prev) => {
-        const copy = [...prev];
-        copy[index] = { ...copy[index], [field]: newValue };
-        return copy;
-      });
+        setProjectData((prev) => {
+            const copy = [...prev];
+            copy[index] = { ...copy[index], [field]: newValue };
+            return copy;
+        });
     };
 
     const addKVRow = () => setProjectData((prev) => [...prev, { key: '', value: '' }]);
 
-    const removeKVRow = (index) => {
-      setProjectData((prev) => prev.filter((_, i) => i !== index));
+    const removeKVRow = async (index, id) => {
+        const itemToRemove = projectData[index];
+
+        if (currentProject && itemToRemove?.key) {
+            try {
+                await api.delete(`/projects/${currentProject.id}/data/${id}`);
+                toast.success('Project data deleted successfully');
+            } catch (error) {
+                toast.error('Failed to delete project data');
+                console.error(error);
+            }
+        }
+
+        setProjectData((prev) => prev.filter((_, i) => i !== index));
     };
 
 
@@ -167,8 +181,7 @@ export default function Projects() {
                             title: '',
                             description: '',
                             image: '',
-                            // cover_image: '',
-                            // category: ''
+                            tags: [],
                         });
                         setProjectData([{ key: '', value: '' }]);
                         setGalleryFormData(null);
@@ -194,7 +207,7 @@ export default function Projects() {
                                     </th>
                                     <th scope="col"
                                         className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                                        Category
+                                        Tags
                                     </th>
                                     <th scope="col"
                                         className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -209,17 +222,31 @@ export default function Projects() {
                                             <div className="text-sm font-medium text-gray-900">{project.title}</div>
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap">
-                                            <div className="text-sm text-gray-500">{project?.category}</div>
+                                            <div className="text-sm text-gray-500">
+                                                {Array.isArray(project?.tags) && project.tags.length > 0
+                                                    ? project.tags.join(', ')
+                                                    : (project?.category || '')}
+                                            </div>
                                         </td>
                                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                             <button
                                                 onClick={() => {
                                                     setCurrentProject(project);
-                                                    setFormData(project);
+                                                    setFormData(() => {
+                                                        const normalizedTags = Array.isArray(project?.tags)
+                                                            ? project.tags
+                                                            : (project?.category ? [project.category] : []);
+                                                        return {
+                                                            title: project.title || '',
+                                                            description: project.description || '',
+                                                            image: project.image || '',
+                                                            tags: normalizedTags
+                                                        };
+                                                    });
                                                     setProjectData(
-                                                      Array.isArray(project.project_data) && project.project_data.length
-                                                        ? project.project_data.map(({ key, value }) => ({ key, value }))
-                                                        : [{ key: '', value: '' }]
+                                                        Array.isArray(project.project_data) && project.project_data.length
+                                                            ? project.project_data.map(({id, key, value }) => ({id, key, value }))
+                                                            : [{ key: '', value: '' }]
                                                     );
                                                     setModalOpen(true);
                                                 }}
@@ -279,25 +306,27 @@ export default function Projects() {
                                     </div>
 
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700">Category</label>
-                                        <input
-                                            type="text"
+                                        <label className="block text-sm font-medium text-gray-700">Tag</label>
+                                        <select
                                             required
                                             className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                                            value={formData.category}
-                                            onChange={(e) => setFormData({...formData, category: e.target.value})}
-                                        />
+                                            value={(Array.isArray(formData?.tags) && formData.tags[0]) || ''}
+                                            onChange={(e) => setFormData({ ...formData, tags: e.target.value ? [e.target.value] : [] })}
+                                        >
+                                            <option value="" disabled>Choose a tag</option>
+                                            <option value="RESIDENTIAL">RESIDENTIAL</option>
+                                            <option value="COMMERCIAL">COMMERCIAL</option>
+                                        </select>
                                     </div>
 
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700">Cover Image
-                                            URL</label>
+                                        <label className="block text-sm font-medium text-gray-700">Cover Image</label>
                                         <input
-                                          type="file"
-                                          required={!currentProject}
-                                          className="mt-1 block w-full"
-                                          accept="image/*"
-                                          onChange={handleImageUpload}
+                                            type="file"
+                                            required={!currentProject}
+                                            className="mt-1 block w-full"
+                                            accept="image/*"
+                                            onChange={handleImageUpload}
                                         />
                                     </div>
 
@@ -323,7 +352,7 @@ export default function Projects() {
                                                     />
                                                     <button
                                                         type="button"
-                                                        onClick={() => removeKVRow(idx)}
+                                                        onClick={() => removeKVRow(idx, row.id)}
                                                         className="text-red-600 hover:text-red-800 text-sm"
                                                     >
                                                         Remove
@@ -348,7 +377,6 @@ export default function Projects() {
                                             multiple
                                             accept="image/*"
                                             onChange={handleGalleryUpload}
-                                            // onChange={handleImage}
                                             className="mt-1 block w-full"
                                         />
                                         <div className="mt-2">
