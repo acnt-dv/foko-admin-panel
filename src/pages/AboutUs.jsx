@@ -40,6 +40,7 @@ export default function AboutUs() {
       formData.append('background_image', aboutData.background_image_file);
     }
     try {
+      const FOKO_API_TOKEN = localStorage.getItem('token');
       await api.post('/about', formData, {
         headers: {
           Authorization: FOKO_API_TOKEN,
