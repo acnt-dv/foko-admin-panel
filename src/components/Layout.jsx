@@ -10,6 +10,7 @@ import {
 } from '@heroicons/react/24/outline';
 import { Link, useLocation, Outlet } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import LOGOSRC from '../assets/foko.svg';
 
 const navigation = [
   { name: 'Dashboard', href: '/dashboard', icon: HomeIcon },
@@ -65,8 +66,8 @@ export default function Layout() {
               <div className="flex-1 h-0 pt-5 pb-4 overflow-y-auto">
                 <div className="flex-shrink-0 flex items-center px-4">
                   <img
-                    className="h-8 w-auto"
-                    src="/logo.png"
+                    className="h-6 w-auto"
+                    src={LOGOSRC}
                     alt="Foko Admin"
                   />
                 </div>
@@ -114,8 +115,8 @@ export default function Layout() {
             <div className="flex-1 flex flex-col pt-5 pb-4 overflow-y-auto">
               <div className="flex items-center flex-shrink-0 px-4">
                 <img
-                  className="h-8 w-auto"
-                  src="/logo.png"
+                  className="h-6 w-auto"
+                  src={LOGOSRC}
                   alt="Foko Admin"
                 />
               </div>
