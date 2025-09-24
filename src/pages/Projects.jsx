@@ -43,13 +43,31 @@ export default function Projects() {
             console.debug([...formDataToSend.entries()]);
             if (currentProject) {
                 await api.put(`/projects/${currentProject.id}`, formDataToSend);
+                const originalData = currentProject.project_data || [];
+
                 await Promise.all(
                     (projectData || [])
-                        .filter((item) => item && item.key && item.key.trim() !== '')
-                        .map((item) => api.post(`/projects/${currentProject.id}/data`, {
-                            key: item.key,
-                            value: item.value ?? ''
-                        }))
+                        .filter((item) => {
+                            if (!item.key || !item.key.trim()) return false;
+                            const original = originalData.find(o => o.id === item.id);
+                            // فقط وقتی ارسال کن که آیتم جدید باشه یا مقدار تغییر کرده باشه
+                            return !original || original.value !== item.value || original.key !== item.key;
+                        })
+                        .map((item) => {
+                            if (item.id) {
+                                // اگر id داره یعنی آپدیت (PUT)
+                                return api.put(`/projects/${currentProject.id}/data/${item.id}`, {
+                                    key: item.key,
+                                    value: item.value ?? ''
+                                });
+                            } else {
+                                // اگر id نداره یعنی آیتم جدید (POST)
+                                return api.post(`/projects/${currentProject.id}/data`, {
+                                    key: item.key,
+                                    value: item.value ?? ''
+                                });
+                            }
+                        })
                 );
                 toast.success('Project updated successfully');
             } else {
