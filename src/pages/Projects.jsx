@@ -12,6 +12,8 @@ export default function Projects() {
     const [formData, setFormData] = useState(null);
     const [galleryFormData, setGalleryFormData] = useState(null);
     const [projectData, setProjectData] = useState([{id: '', key: '', value: ''}]);
+    const [imageDirty, setImageDirty] = useState(false);
+    const [galleryDirty, setGalleryDirty] = useState(false);
 
     useEffect(() => {
         fetchProjects();
@@ -32,37 +34,43 @@ export default function Projects() {
         try {
             const formDataToSend = new FormData();
             Object.entries(formData || {}).forEach(([key, value]) => {
-                if (key === 'image' && value && value.file) {
-                    formDataToSend.append('image', value.file, value.name || 'uploaded-image.png');
+                if (key === 'image') {
+                    // Only send image if user actually changed it
+                    if (imageDirty && value && value.file) {
+                        formDataToSend.append('image', value.file, value.name || 'uploaded-image.png');
+                    }
                 } else if (key === 'tags') {
                     const tagsArray = Array.isArray(value) ? value : (value ? [value] : []);
-                    formDataToSend.append('tags[]', tagsArray);
+                    // append each tag individually to avoid array being stringifies
+                    tagsArray.forEach(t => formDataToSend.append('tags[]', t));
                 } else if (value !== undefined && value !== null) {
                     formDataToSend.append(key, value);
                 }
             });
+
             console.debug([...formDataToSend.entries()]);
+
             if (currentProject) {
+                // Update main project fields (without unchanged image)
                 await api.post(`/projects/${currentProject.id}`, formDataToSend);
+
                 const originalData = currentProject.project_data || [];
 
+                // Upsert changed custom data only
                 await Promise.all(
                     (projectData || [])
                         .filter((item) => {
                             if (!item.key || !item.key.trim()) return false;
                             const original = originalData.find(o => o.id === item.id);
-                            // فقط وقتی ارسال کن که آیتم جدید باشه یا مقدار تغییر کرده باشه
                             return !original || original.value !== item.value || original.key !== item.key;
                         })
                         .map((item) => {
                             if (item.id) {
-                                // اگر id داره یعنی آپدیت (PUT)
                                 return api.post(`/projects/${currentProject.id}/data/${item.id}`, {
                                     key: item.key,
                                     value: item.value ?? ''
                                 });
                             } else {
-                                // اگر id نداره یعنی آیتم جدید (POST)
                                 return api.post(`/projects/${currentProject.id}/data`, {
                                     key: item.key,
                                     value: item.value ?? ''
@@ -70,14 +78,31 @@ export default function Projects() {
                             }
                         })
                 );
+
+                // Upload new gallery images only if user changed them in update mode
+                if (galleryDirty && galleryFormData?.images?.length) {
+                    const galleryResults = await Promise.allSettled(
+                        galleryFormData.images.map((item) => {
+                            const dataToSend = new FormData();
+                            dataToSend.append('image', item.file, item.name || 'uploaded-image.png');
+                            return api.post(`/projects/${currentProject.id}/gallery`, dataToSend);
+                        })
+                    );
+                    const failedUploads = galleryResults.filter(r => r.status === 'rejected').length;
+                    if (failedUploads > 0) {
+                        toast.warn(`${failedUploads} image${failedUploads > 1 ? 's' : ''} failed to upload. The rest were uploaded successfully.`);
+                    }
+                }
+
                 toast.success('Project updated successfully');
             } else {
+                // Create mode (always send selected image/gallery if provided)
                 const response = await api.post('/projects', formDataToSend);
                 if (response?.data?.id) {
                     const galleryResults = await Promise.allSettled(
                         (galleryFormData?.images || []).map((item) => {
                             const dataToSend = new FormData();
-                            dataToSend.append("image", item.file, item.name || "uploaded-image.png");
+                            dataToSend.append('image', item.file, item.name || 'uploaded-image.png');
                             return api.post(`/projects/${response.data.id}/gallery`, dataToSend);
                         })
                     );
@@ -97,6 +122,8 @@ export default function Projects() {
                 toast.success('Project created successfully');
             }
             setProjectData([{key: '', value: ''}]);
+            setImageDirty(false);
+            setGalleryDirty(false);
             setModalOpen(false);
             fetchProjects();
         } catch (error) {
@@ -126,6 +153,7 @@ export default function Projects() {
                 name: file.name || "uploaded-image.png",
             },
         }));
+        setImageDirty(true);
     };
 
     const handleGalleryUpload = async (e) => {
@@ -157,6 +185,7 @@ export default function Projects() {
                 ...prev,
                 images,
             }));
+            setGalleryDirty(true);
         } catch (err) {
             console.error("Error reading files:", err);
         }
@@ -204,6 +233,8 @@ export default function Projects() {
                         });
                         setProjectData([{key: '', value: ''}]);
                         setGalleryFormData(null);
+                        setImageDirty(false);
+                        setGalleryDirty(false);
                         setModalOpen(true);
                     }}
                     className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700"
@@ -272,6 +303,9 @@ export default function Projects() {
                                                             : [{key: '', value: ''}]
                                                     );
                                                     setModalOpen(true);
+                                                    setImageDirty(false);
+                                                    setGalleryDirty(false);
+                                                    setGalleryFormData(null);
                                                 }}
                                                 className="text-indigo-600 hover:text-indigo-900 mr-4"
                                             >
@@ -324,7 +358,6 @@ export default function Projects() {
                                                 value={formData.description}
                                                 onChange={(content) => setFormData({...formData, description: content})}
                                                 placeholder="Write the project description here…"
-
                                             />
                                         </div>
                                     </div>
