@@ -1,9 +1,10 @@
 // src/pages/AboutUs.jsx
+
 import { useEffect, useState } from 'react';
 import api from '../config/axios';
 import { toast } from 'react-toastify';
-import ReactQuill from 'react-quill';
 import 'react-quill/dist/quill.snow.css';
+import RichTextEditor from "../utils/RichTextEditor.jsx";
 
 export default function AboutUs() {
   const [aboutData, setAboutData] = useState({
@@ -64,7 +65,7 @@ export default function AboutUs() {
       <h1 className="text-2xl font-semibold text-gray-900">About Us</h1>
 
       <div className="bg-white shadow rounded-lg p-6">
-        <div className="space-y-4">
+        <div className="space-y-4 pb-24">
           <div>
             <label className="block text-sm font-medium text-gray-700">
               Background Image
@@ -92,34 +93,18 @@ export default function AboutUs() {
               Content
             </label>
             <div className="mt-1">
-              <ReactQuill
+              <RichTextEditor
                 value={aboutData.text}
                 onChange={(content) => setAboutData({ ...aboutData, text: content })}
-                modules={{
-                  toolbar: [
-                    [{ header: [1, 2, 3, false] }],
-                    ['bold', 'italic', 'underline', 'strike'],
-                    [{ list: 'ordered' }, { list: 'bullet' }],
-                    [{ align: [] }],
-                    ['link', 'image'],
-                    ['clean']
-                  ],
-                }}
-                formats={[
-                  'header',
-                  'bold', 'italic', 'underline', 'strike',
-                  'list', 'bullet',
-                  'align',
-                  'link', 'image',
-                  'clean'
-                ]}
-                style={{ height: 500 }}
+                placeholder="Write the About Us content here…"
+                height="50vh"
               />
             </div>
           </div>
 
-          <div className="flex justify-end">
+          <div className="sticky bottom-0 z-10 bg-white/95 backdrop-blur supports-[backdrop-filter]:bg-white/60 border-t border-gray-200 py-3 -mx-6 px-6 flex justify-end">
             <button
+              type="button"
               onClick={handleUpdate}
               className="ml-3 inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
             >
