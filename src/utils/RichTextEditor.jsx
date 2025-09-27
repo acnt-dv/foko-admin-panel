@@ -24,7 +24,7 @@ const RichTextEditor = ({
                             value,
                             onChange,
                             placeholder = "Write the content here…",
-                            height = '50vh',
+                            height = 'auto',
                             modules = quillModules,
                             formats = quillFormats
                         }) => {

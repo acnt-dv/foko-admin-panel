@@ -1,8 +1,9 @@
 // src/pages/Projects.jsx
-import {useState, useEffect} from 'react';
+import {useEffect, useState} from 'react';
 import api from '../config/axios';
 import {toast} from 'react-toastify';
 import GalleryPreview from "../components/GalleryPreview.jsx";
+import RichTextEditor from '../utils/RichTextEditor.jsx';
 
 export default function Projects() {
     const [projects, setProjects] = useState([]);
@@ -10,7 +11,7 @@ export default function Projects() {
     const [currentProject, setCurrentProject] = useState(null);
     const [formData, setFormData] = useState(null);
     const [galleryFormData, setGalleryFormData] = useState(null);
-    const [projectData, setProjectData] = useState([{id: '', key: '', value: '' }]);
+    const [projectData, setProjectData] = useState([{id: '', key: '', value: ''}]);
 
     useEffect(() => {
         fetchProjects();
@@ -95,7 +96,7 @@ export default function Projects() {
                 }
                 toast.success('Project created successfully');
             }
-            setProjectData([{ key: '', value: '' }]);
+            setProjectData([{key: '', value: ''}]);
             setModalOpen(false);
             fetchProjects();
         } catch (error) {
@@ -164,12 +165,12 @@ export default function Projects() {
     const handleKVChange = (index, field, newValue) => {
         setProjectData((prev) => {
             const copy = [...prev];
-            copy[index] = { ...copy[index], [field]: newValue };
+            copy[index] = {...copy[index], [field]: newValue};
             return copy;
         });
     };
 
-    const addKVRow = () => setProjectData((prev) => [...prev, { key: '', value: '' }]);
+    const addKVRow = () => setProjectData((prev) => [...prev, {key: '', value: ''}]);
 
     const removeKVRow = async (index, id) => {
         const itemToRemove = projectData[index];
@@ -201,7 +202,7 @@ export default function Projects() {
                             image: '',
                             tags: [],
                         });
-                        setProjectData([{ key: '', value: '' }]);
+                        setProjectData([{key: '', value: ''}]);
                         setGalleryFormData(null);
                         setModalOpen(true);
                     }}
@@ -263,8 +264,12 @@ export default function Projects() {
                                                     });
                                                     setProjectData(
                                                         Array.isArray(project.project_data) && project.project_data.length
-                                                            ? project.project_data.map(({id, key, value }) => ({id, key, value }))
-                                                            : [{ key: '', value: '' }]
+                                                            ? project.project_data.map(({id, key, value}) => ({
+                                                                id,
+                                                                key,
+                                                                value
+                                                            }))
+                                                            : [{key: '', value: ''}]
                                                     );
                                                     setModalOpen(true);
                                                 }}
@@ -312,15 +317,16 @@ export default function Projects() {
                                         />
                                     </div>
 
-                                    <div>
+                                    <div className="mb-6">
                                         <label className="block text-sm font-medium text-gray-700">Description</label>
-                                        <textarea
-                                            required
-                                            rows="3"
-                                            className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                                            value={formData.description}
-                                            onChange={(e) => setFormData({...formData, description: e.target.value})}
-                                        />
+                                        <div className="mt-1">
+                                            <RichTextEditor
+                                                value={formData.description}
+                                                onChange={(content) => setFormData({...formData, description: content})}
+                                                placeholder="Write the project description here…"
+
+                                            />
+                                        </div>
                                     </div>
 
                                     <div>
@@ -329,7 +335,10 @@ export default function Projects() {
                                             required
                                             className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
                                             value={(Array.isArray(formData?.tags) && formData.tags[0]) || ''}
-                                            onChange={(e) => setFormData({ ...formData, tags: e.target.value ? [e.target.value] : [] })}
+                                            onChange={(e) => setFormData({
+                                                ...formData,
+                                                tags: e.target.value ? [e.target.value] : []
+                                            })}
                                         >
                                             <option value="" disabled>Choose a tag</option>
                                             <option value="RESIDENTIAL">RESIDENTIAL</option>
@@ -349,8 +358,10 @@ export default function Projects() {
                                     </div>
 
                                     <div>
-                                        <h3 className="mt-2 mb-1 text-sm font-semibold text-gray-900 border-t pt-3">Project Custom Data</h3>
-                                        <label className="block text-sm font-medium text-gray-700">Custom Data (Key / Value)</label>
+                                        <h3 className="mt-2 mb-1 text-sm font-semibold text-gray-900 border-t pt-3">Project
+                                            Custom Data</h3>
+                                        <label className="block text-sm font-medium text-gray-700">Custom Data (Key /
+                                            Value)</label>
                                         <div className="mt-2 space-y-2">
                                             {projectData.map((row, idx) => (
                                                 <div key={idx} className="flex items-center gap-2">
@@ -398,7 +409,9 @@ export default function Projects() {
                                             className="mt-1 block w-full"
                                         />
                                         <div className="mt-2">
-                                            <GalleryPreview galleryFormData={galleryFormData} setGalleryFormData={setGalleryFormData} currentProject={currentProject}/>
+                                            <GalleryPreview galleryFormData={galleryFormData}
+                                                            setGalleryFormData={setGalleryFormData}
+                                                            currentProject={currentProject}/>
                                         </div>
                                     </div>
                                 </div>
