@@ -35,14 +35,14 @@ export default function Projects() {
                     formDataToSend.append('image', value.file, value.name || 'uploaded-image.png');
                 } else if (key === 'tags') {
                     const tagsArray = Array.isArray(value) ? value : (value ? [value] : []);
-                    formDataToSend.append('tags', tagsArray);
+                    formDataToSend.append('tags[]', tagsArray);
                 } else if (value !== undefined && value !== null) {
                     formDataToSend.append(key, value);
                 }
             });
             console.debug([...formDataToSend.entries()]);
             if (currentProject) {
-                await api.put(`/projects/${currentProject.id}`, formDataToSend);
+                await api.post(`/projects/${currentProject.id}`, formDataToSend);
                 const originalData = currentProject.project_data || [];
 
                 await Promise.all(
@@ -56,7 +56,7 @@ export default function Projects() {
                         .map((item) => {
                             if (item.id) {
                                 // اگر id داره یعنی آپدیت (PUT)
-                                return api.put(`/projects/${currentProject.id}/data/${item.id}`, {
+                                return api.post(`/projects/${currentProject.id}/data/${item.id}`, {
                                     key: item.key,
                                     value: item.value ?? ''
                                 });

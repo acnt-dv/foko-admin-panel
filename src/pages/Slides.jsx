@@ -65,7 +65,7 @@ export default function Slides() {
       });
 
       if (currentSlide) {
-        await api.put(`/slides/${currentSlide.id}`, formDataToSend);
+        await api.post(`/slides/${currentSlide.id}`, formDataToSend);
         toast.success('Slide updated successfully');
       } else {
         await api.post('/slides', formDataToSend);
