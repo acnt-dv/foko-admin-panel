@@ -13,6 +13,8 @@ import {
   rectSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import api from "../config/axios.js";
+import {toast} from "react-toastify";
 
 const SortableImage = ({ url, index, img = {}, onDelete }) => {
   const { attributes, listeners, setNodeRef, transform, transition } =
@@ -120,10 +122,28 @@ const GalleryPreview = ({ galleryFormData, setGalleryFormData, currentProject })
 
   const handleDelete = (index) => {
     const updated = (galleryFormData?.images || [])
-      .filter((_, i) => i !== index)
-      .map((img, i) => ({ ...img, order: i + 1 }));
+        .filter((_, i) => i !== index)
+        .map((img, i) => ({ ...img, order: i + 1 }));
 
+    const deletedImage = galleryFormData?.images?.[index];
+
+    if (deletedImage?.id && currentProject?.id) {
+      api
+          .delete(`/projects/${currentProject.id}/gallery/${deletedImage.id}`)
+          .then(() => {
+            toast.success("Image deleted successfully");
+
+            // re-render gallery
+            setGalleryFormData((prev) => ({ ...prev, images: updated }));
+          })
+          .catch((err) => console.error("Failed to delete gallery image", err));
+
+      return; // important: avoid running setGalleryFormData twice
+    }
+
+    // if image has no id (new image before upload)
     setGalleryFormData((prev) => ({ ...prev, images: updated }));
+    toast.success("Image removed");
   };
 
   return (
