@@ -105,8 +105,11 @@ export default function Projects() {
                                 order: img.order
                             }))
                     };
-                    await api.put(`/projects/${currentProject.id}/gallery/order`, orderPayload)
-                        .catch(err => console.error("Failed to update gallery order", err));
+
+                    if(orderPayload?.order?.length > 0) {
+                        await api.put(`/projects/${currentProject.id}/gallery/order`, orderPayload)
+                            .catch(err => console.error("Failed to update gallery order", err));
+                    }
                 }
 
                 toast.success('Project updated successfully');
