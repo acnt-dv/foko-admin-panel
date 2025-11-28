@@ -95,6 +95,20 @@ export default function Projects() {
                     }
                 }
 
+                // Update gallery image order if images exist
+                if (galleryFormData?.images?.length) {
+                    const orderPayload = {
+                        order: galleryFormData.images
+                            .filter(img => img.id)
+                            .map(img => ({
+                                id: img.id,
+                                order: img.order
+                            }))
+                    };
+                    await api.put(`/projects/${currentProject.id}/gallery/order`, orderPayload)
+                        .catch(err => console.error("Failed to update gallery order", err));
+                }
+
                 toast.success('Project updated successfully');
             } else {
                 // Create mode (always send selected image/gallery if provided)
