@@ -85,6 +85,7 @@ export default function Projects() {
                         galleryFormData.images.map((item) => {
                             const dataToSend = new FormData();
                             dataToSend.append('image', item.file, item.name || 'uploaded-image.png');
+                            dataToSend.append('order', item.order);
                             return api.post(`/projects/${currentProject.id}/gallery`, dataToSend);
                         })
                     );
@@ -103,6 +104,7 @@ export default function Projects() {
                         (galleryFormData?.images || []).map((item) => {
                             const dataToSend = new FormData();
                             dataToSend.append('image', item.file, item.name || 'uploaded-image.png');
+                            dataToSend.append('order', item.order);
                             return api.post(`/projects/${response.data.id}/gallery`, dataToSend);
                         })
                     );

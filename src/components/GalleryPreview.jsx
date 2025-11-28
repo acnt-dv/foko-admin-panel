@@ -10,7 +10,7 @@ const GalleryPreview = ({ galleryFormData, setGalleryFormData, currentProject })
             setGalleryFormData({images: currentProject?.galleries});
         }
     },[]);
-    
+
     useEffect(() => {
         const urls = galleryFormData?.images?.map((image) => {
             if (typeof image?.file === "string" || typeof image?.image === "string") {
@@ -40,7 +40,16 @@ const GalleryPreview = ({ galleryFormData, setGalleryFormData, currentProject })
         <div className="flex flex-wrap gap-4">
             {previewUrls?.map((url, index) => (
                 <div key={index} className="relative w-1/4 md:w-1/6 lg:w-1/8">
+                    {(() => {
+                        if (galleryFormData?.images?.[index]) {
+                            galleryFormData.images[index].order = index + 1;
+                        }
+                        return null;
+                    })()}
                     <img src={url} alt={`image-${index}`} className="h-20 w-20 object-cover rounded" />
+                    <div className="absolute bottom-1 right-1 bg-black text-white text-xs px-2 py-1 rounded">
+                      {index + 1}
+                    </div>
                     <button
                         type="button"
                         onClick={() => {
