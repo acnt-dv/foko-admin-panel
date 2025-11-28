@@ -76,6 +76,15 @@ const GalleryPreview = ({ galleryFormData, setGalleryFormData, currentProject })
       order: img?.order ?? idx + 1,
     }));
 
+    const needsUpdate = normalized.some((img, i) => img.order !== images[i].order);
+
+    if (needsUpdate) {
+      setGalleryFormData(prev => ({
+        ...prev,
+        images: normalized
+      }));
+    }
+
     const urls = normalized.map((image) => {
       if (typeof image?.file === "string" || typeof image?.image === "string") {
         return image?.image || image?.file;
